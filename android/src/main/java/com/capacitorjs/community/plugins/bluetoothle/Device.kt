@@ -210,7 +210,11 @@ class Device(
                     gattCallback
                 )
         }
+
         connectionState = STATE_CONNECTING
+
+        refreshDeviceCache(key)
+
         setConnectionTimeout(key, "Connection timeout.", bluetoothGatt, timeout)
     }
 
@@ -300,6 +304,22 @@ class Device(
 
     fun getServices(): MutableList<BluetoothGattService> {
         return bluetoothGatt?.services ?: mutableListOf<BluetoothGattService>()
+    }
+
+    private fun refreshDeviceCache(
+        key: String
+    ) {
+        var result = false
+        try {
+            val localMethod = bluetoothGatt?.javaClass?.getMethod("refresh")
+            if (localMethod != null) {
+                result = (localMethod.invoke(bluetoothGatt) as Boolean)
+            }
+        } catch (localException: Exception) { }
+
+        if (result != true) {
+            reject(key, "Refreshing device cache failed.")
+        }
     }
 
     fun readRssi(
